@@ -1,0 +1,13 @@
+apiVersion: v2
+name: medusa-store
+description: MedusaJS (Node.js + PostgreSQL + Redis) store chart for the provisioning platform
+type: application
+version: 1.0.0
+appVersion: "2.0"
+keywords:
+  - medusa
+  - ecommerce
+  - postgresql
+  - redis
+maintainers:
+  - name: Platform Team

@@ -1,0 +1,12 @@
+# Production (k3s on VPS) overrides
+
+ingress:
+  enabled: true
+  className: traefik
+
+storefront:
+  enabled: false
+
+postgres:
+  storage:
+    size: 10Gi

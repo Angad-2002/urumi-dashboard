@@ -1,0 +1,63 @@
+# Default values for store chart. Override with values-local.yaml or values-prod.yaml.
+
+storeId: ""
+
+wordpress:
+  image:
+    repository: storeplatform/wordpress-woocommerce
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  adminUser: admin
+  adminPassword: ""
+  adminEmail: admin@example.com
+  resources:
+    requests: { memory: "256Mi", cpu: "100m" }
+    limits: { memory: "512Mi", cpu: "500m" }
+  readinessProbe:
+    httpGet: { path: "/", port: 80 }
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    failureThreshold: 12
+  livenessProbe:
+    httpGet: { path: "/", port: 80 }
+    initialDelaySeconds: 120
+    periodSeconds: 20
+    failureThreshold: 6
+
+mysql:
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  auth:
+    database: wordpress
+    username: wordpress
+    password: ""
+    rootPassword: ""
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+  resources:
+    requests: { memory: "256Mi", cpu: "100m" }
+    limits: { memory: "512Mi", cpu: "500m" }
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+    persistentvolumeclaims: "2"

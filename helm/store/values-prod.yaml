@@ -1,0 +1,12 @@
+# Production (k3s on VPS) overrides
+
+ingress:
+  className: traefik
+
+mysql:
+  persistence:
+    enabled: true
+    size: 10Gi
+
+resourceQuota:
+  enabled: true

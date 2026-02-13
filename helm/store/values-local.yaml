@@ -1,0 +1,12 @@
+# Local (k3d/kind/minikube) overrides
+
+ingress:
+  className: traefik
+
+mysql:
+  persistence:
+    enabled: true
+    size: 2Gi
+
+resourceQuota:
+  enabled: false

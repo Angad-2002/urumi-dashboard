@@ -1,0 +1,13 @@
+# Local (k3d/kind/minikube) overrides
+
+ingress:
+  enabled: true
+  className: traefik
+
+# Disable storefront for local so only medusa-backend image is required
+storefront:
+  enabled: false
+
+postgres:
+  storage:
+    size: 2Gi
