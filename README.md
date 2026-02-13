@@ -70,7 +70,7 @@ Namespace: store-<slug>
 ├── Deployment (wordpress or {storeId}-medusa, optional redis/storefront)
 ├── StatefulSet (mysql or {storeId}-postgres)
 ├── Service (wordpress, mysql or medusa, postgres, redis)
-├── PersistentVolumeClaim (DB + optional app storage)
+├── PersistentVolumeClaim (DB: WooCommerce mysql only; Medusa postgres + optional)
 ├── Ingress (wordpress-ingress or {storeId}-ingress)
 └── ResourceQuota (optional; enabled in values-prod)
 ```
@@ -114,12 +114,14 @@ kubectl cluster-info
 
 ```bash
 docker run -d --name storeplatform-db \
-  -e POSTGRES_DB=storeplatform \
-  -e POSTGRES_USER=storeplatform \
-  -e POSTGRES_PASSWORD=storeplatform123 \
-  -p 5432:5432 \
+  -e POSTGRES_DB=storeweaver \
+  -e POSTGRES_USER=storeweaver \
+  -e POSTGRES_PASSWORD=storeweaver123 \
+  -p 5433:5432 \
   postgres:15
 ```
+
+In backend `.env`, set `DATABASE_URL=postgresql://storeweaver:storeweaver123@localhost:5433/storeweaver` (or match the values above if you change them). The default in `.env.example` uses this URL.
 
 ### 3. WordPress + WooCommerce image
 

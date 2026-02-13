@@ -4,7 +4,7 @@
 
 ## Architecture
 
-- **Dashboard (Store Weaver):** React SPA. Signs in with email (in-memory); sends `X-User-Id` to API for per-user store list and limit. Polls store list every 5s when any store is provisioning or deleting.
+- **Dashboard (Store Weaver):** React SPA. Signs in with email (in-memory); sends `X-User-Id` to API for per-user store list and limit. Polls store list every 4s when any store is provisioning or deleting.
 - **Backend:** Express API. Creates store record in PostgreSQL, then provisions asynchronously via Helm (namespace-per-store). Uses Kubernetes client to monitor readiness and to serve store detail (resources, events).
 - **Helm:** One chart per store; values differ via `values-local.yaml` / `values-prod.yaml`. Same chart runs locally (k3d) and on VPS (k3s).
 

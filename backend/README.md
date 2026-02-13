@@ -74,7 +74,7 @@ API base: **http://localhost:3000** (or `PORT` from `.env`).
 - **src/models/** — Store type
 - **src/middleware/** — Error handler, request logger
 - **src/utils/** — crypto (slug, password), logger, exec (helm CLI)
-- **migrations/** — Knex migrations
+- **src/migrations/** — Knex migrations
 
 ## Related
 
