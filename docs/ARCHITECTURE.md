@@ -257,7 +257,7 @@ flowchart TB
     Ingress --> Med
   end
 
-  Backend -->|helm install/uninstall<br/>K8s API (list/watch)| K8s
+  Backend -->|helm install/uninstall, K8s API| K8s
 ```
 
 ---
