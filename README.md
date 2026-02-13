@@ -4,6 +4,79 @@ Store provisioning platform: React dashboard (Store Weaver) + Node.js API + Helm
 
 **Stack:** Frontend (React + Vite + shadcn) → Backend (Node.js + TypeScript) → PostgreSQL → Helm → Kubernetes (k3d/k3s).
 
+**Creator:** [@Angad-2002](https://github.com/Angad-2002)
+
+---
+
+## Table of contents
+
+- [Architecture](#architecture)
+- [Project layout](#project-layout)
+- [Prerequisites](#prerequisites)
+- [Local setup](#local-setup)
+- [Auth](#auth-sign-in--sign-up)
+- [Create a store and place an order](#create-a-store-and-place-an-order-definition-of-done)
+- [API](#api-backend)
+- [Production](#production-k3s-on-vps)
+- [Technology stack](#technology-stack)
+- [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
+- [Author](#author)
+
+---
+
+## Architecture
+
+High-level flow: the **dashboard** talks to the **backend** API; the backend stores metadata in **PostgreSQL** and provisions each store via **Helm** into a dedicated **Kubernetes** namespace (WooCommerce or Medusa). Stores are exposed via **Ingress** (e.g. Traefik).
+
+```mermaid
+flowchart LR
+  subgraph User
+    U[User]
+  end
+  subgraph Platform["Platform"]
+    D[Dashboard]
+    API[Backend API]
+    DB[(PostgreSQL)]
+    D --> API
+    API --> DB
+  end
+  subgraph K8s["Kubernetes"]
+    NS[Store namespaces<br/>WooCommerce / Medusa]
+  end
+  U --> D
+  API -->|Helm + K8s API| K8s
+```
+
+| Component | Role |
+|-----------|------|
+| **Dashboard** | React SPA; create/list/delete stores, view status & detail; sends `X-User-Id`. |
+| **Backend** | Express API + store logic; Helm install/uninstall; K8s monitoring; quotas. |
+| **PostgreSQL** | Store metadata (id, name, namespace, status, url). |
+| **Helm charts** | One namespace per store; WordPress+MySQL (WooCommerce) or Medusa+Postgres+Redis. |
+
+### Component interactions
+
+- **Dashboard** → `GET/POST /api/stores`, `GET/DELETE /api/stores/:id`, `GET /api/stores/:id/detail`, `POST /api/stores/:id/retry` (optional header `X-User-Id`).
+- **Backend** → **store.service** (create, list, get, retry, delete, detail); **helm.service** (install / installMedusa / uninstall); **kubernetes.service** (namespaces, resources, events); **monitor.service** (waitForReady); **store.repository** → PostgreSQL.
+
+### Resource hierarchy (per store namespace)
+
+Each store runs in a dedicated namespace (e.g. `store-mystore`). Typical resources:
+
+```
+Namespace: store-<slug>
+├── Secret (mysql-secret / wordpress-secret or Medusa secrets)
+├── Deployment (wordpress or {storeId}-medusa, optional redis/storefront)
+├── StatefulSet (mysql or {storeId}-postgres)
+├── Service (wordpress, mysql or medusa, postgres, redis)
+├── PersistentVolumeClaim (DB + optional app storage)
+├── Ingress (wordpress-ingress or {storeId}-ingress)
+└── ResourceQuota (optional; enabled in values-prod)
+```
+
+Full diagrams, provisioning/delete sequences, and data model: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ---
 
 ## Project layout
@@ -15,7 +88,7 @@ Store provisioning platform: React dashboard (Store Weaver) + Node.js API + Helm
 | **[helm/store/](helm/store/README.md)** | Per-store chart for **WooCommerce** (WordPress + MySQL, Ingress, optional ResourceQuota). Use `values-local.yaml` or `values-prod.yaml`. |
 | **[helm/medusa-store/](helm/medusa-store/README.md)** | Per-store chart for **Medusa** (Medusa backend + PostgreSQL + Redis, optional Next.js storefront). Used when you create a store with engine **Medusa**. |
 | **[docker/](docker/README.md)** | Image build context: [wordpress-woocommerce](docker/wordpress-woocommerce/README.md), [medusa-backend](docker/medusa-backend/README.md), [medusa-storefront](docker/medusa-storefront/README.md) (optional). |
-| **[docs/](docs/README.md)** | Design and architecture. See [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) for system design, tradeoffs, production vs local, and scaling. |
+| **[docs/](docs/README.md)** | Design and architecture. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — architecture diagrams (components, flows, K8s layout). [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) — tradeoffs, production vs local, scaling. |
 
 ---
 
@@ -134,7 +207,43 @@ Use the same Helm charts with `values-prod.yaml`. Backend: `ENVIRONMENT=producti
 
 ---
 
+## Technology stack
+
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend** | React 18, Vite, TypeScript, shadcn/ui, Tailwind CSS |
+| **Backend** | Node.js 20, Express, TypeScript, Knex, PostgreSQL 15 |
+| **Provisioning** | Helm 3, @kubernetes/client-node, Helm CLI (exec) |
+| **Store engines** | WooCommerce (WordPress + MySQL 8), Medusa (PostgreSQL, Redis, optional Next.js storefront) |
+| **Infrastructure** | Kubernetes (k3d / k3s), Traefik Ingress, Docker |
+
+---
+
 ## Documentation
 
 - [docs/README.md](docs/README.md) — Documentation index
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — **Architecture diagrams** (system, backend, provisioning/delete flows, Kubernetes per-store layout, data model)
 - [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) — System design, idempotency, cleanup, production vs local, isolation, security, scaling
+
+---
+
+## Troubleshooting
+
+| Issue | What to check |
+|-------|----------------|
+| **Backend won’t start** | `DATABASE_URL` correct; PostgreSQL running; `npm run migrate` run. |
+| **Dashboard shows no stores** | `VITE_API_URL` set to backend URL (e.g. `http://localhost:3000`) and backend running. |
+| **Store stuck in Provisioning** | k3d/kubectl context correct; Helm chart path in backend `.env`; store image built and imported (see [docker/](docker/README.md)). |
+| **`*.localhost` not resolving** | Use `LOCAL_INGRESS_SUFFIX=.127.0.0.1.nip.io` in backend `.env` or add hosts entry. |
+| **Helm install failed** | `helm version` and `kubectl get nodes`; ensure cluster name matches (e.g. `-c store-platform` for k3d). |
+
+More: [backend/README.md](backend/README.md), [helm/README.md](helm/README.md).
+
+---
+
+## Author
+
+**Angad**  
+GitHub: [@Angad-2002](https://github.com/Angad-2002)
+
+This project was created as part of the Urumi AI SDE internship — Round 1 (Kubernetes Store Orchestration).

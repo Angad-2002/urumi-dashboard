@@ -1,11 +1,13 @@
 # Documentation
 
-This folder contains design and architecture documentation for the Kubernetes Store Orchestration platform (Urumi Round 1).
+This folder contains design and architecture documentation for the Kubernetes Store Orchestration platform (Urumi Round 1).  
+**Creator:** [@Angad-2002](https://github.com/Angad-2002)
 
 ## Contents
 
 | Document | Description |
 |----------|-------------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | **Architecture diagrams** — High-level system, backend internals, provisioning and delete flows, per-store Kubernetes layout, data model, frontend–API usage, local vs prod |
 | [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | System design, architecture, idempotency/failure handling, production vs local, isolation, security, and horizontal scaling |
 
 ## Related

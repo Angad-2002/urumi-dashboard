@@ -1,5 +1,7 @@
 # System Design & Tradeoffs (Urumi Round 1)
 
+**Creator:** [@Angad-2002](https://github.com/Angad-2002)
+
 ## Architecture
 
 - **Dashboard (Store Weaver):** React SPA. Signs in with email (in-memory); sends `X-User-Id` to API for per-user store list and limit. Polls store list every 5s when any store is provisioning or deleting.
